@@ -1,0 +1,19 @@
+[gd_scene load_steps=3 format=3 uid="uid://dmc8aoy0j76p7"]
+
+[ext_resource type="Script" uid="uid://ban20sw0wbou8" path="res://Scenes/Entities/Building.gd" id="1_lfw48"]
+[ext_resource type="Texture2D" uid="uid://dmt0q1g2nq8jo" path="res://Assets/Hexagons/hexagon_64x64.png" id="1_w1gc5"]
+
+[node name="Building" type="Node2D"]
+script = ExtResource("1_lfw48")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+modulate = Color(0.9764706, 0.4509804, 0.08627451, 1)
+texture = ExtResource("1_w1gc5")
+
+[node name="Label" type="Label" parent="."]
+offset_left = -10.0
+offset_top = -23.0
+offset_right = 11.0
+offset_bottom = 22.0
+theme_override_font_sizes/font_size = 32
+text = "B"

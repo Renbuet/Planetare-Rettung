@@ -1,18 +1,55 @@
-[gd_scene format=3 uid="uid://bkt648yl4irxe"]
+[gd_scene load_steps=6 format=3 uid="uid://bkt648yl4irxe"]
+
+[ext_resource type="Script" uid="uid://cr4mdry4n7kq7" path="res://Scenes/Maps/camera_2d.gd" id="1_8e7j1"]
+[ext_resource type="Script" uid="uid://dafuxv5ndkrcn" path="res://Scenes/Maps/world.gd" id="1_545s0"]
+[ext_resource type="Texture2D" uid="uid://dmt0q1g2nq8jo" path="res://Assets/Hexagons/hexagon_64x64.png" id="1_mhfj2"]
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_8e7j1"]
+texture = ExtResource("1_mhfj2")
+margins = Vector2i(3, 0)
+texture_region_size = Vector2i(58, 64)
+0:0/next_alternative_id = 7
+0:0/0 = 0
+0:0/0/modulate = Color(0.11764706, 0.16078432, 0.23137255, 1)
+0:0/1 = 1
+0:0/1/modulate = Color(0.2, 0.25490198, 0.33333334, 1)
+0:0/2 = 2
+0:0/2/modulate = Color(0.08235294, 0.5019608, 0.23921569, 1)
+0:0/3 = 3
+0:0/3/modulate = Color(0.39215687, 0.45490196, 0.54509807, 1)
+0:0/4 = 4
+0:0/4/modulate = Color(0.05490196, 0.64705884, 0.9137255, 1)
+0:0/5 = 5
+0:0/5/modulate = Color(0.9764706, 0.4509804, 0.08627451, 1)
+0:0/6 = 6
+0:0/6/modulate = Color(0.65882355, 0.33333334, 0.96862745, 1)
+
+[sub_resource type="TileSet" id="TileSet_vhrsu"]
+tile_shape = 3
+tile_size = Vector2i(54, 62)
+sources/0 = SubResource("TileSetAtlasSource_8e7j1")
 
 [node name="MainGame" type="Node2D"]
 
 [node name="Camera2D" type="Camera2D" parent="."]
+script = ExtResource("1_8e7j1")
 
 [node name="World" type="Node2D" parent="."]
+script = ExtResource("1_545s0")
 
 [node name="GroundLayer" type="TileMapLayer" parent="World"]
+tile_set = SubResource("TileSet_vhrsu")
 
 [node name="ResourceLayer" type="TileMapLayer" parent="World"]
 
 [node name="Buildings" type="Node2D" parent="World"]
 
 [node name="Units" type="Node2D" parent="World"]
+
+[node name="Selector" type="Sprite2D" parent="World"]
+modulate = Color(1, 1, 1, 0.29411766)
+z_index = 10
+texture = ExtResource("1_mhfj2")
 
 [node name="HUD" type="CanvasLayer" parent="."]
 

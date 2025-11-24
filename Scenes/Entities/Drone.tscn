@@ -1,0 +1,21 @@
+[gd_scene load_steps=3 format=3 uid="uid://p7tfrxwk7rjt"]
+
+[ext_resource type="Script" uid="uid://cggjfqmqawtuh" path="res://Scenes/Entities/Drone.gd" id="1_dgse1"]
+[ext_resource type="Texture2D" uid="uid://dmt0q1g2nq8jo" path="res://Assets/Hexagons/hexagon_64x64.png" id="1_xpjp1"]
+
+[node name="Node2D" type="Node2D"]
+script = ExtResource("1_dgse1")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+modulate = Color(0.24314818, 0.79147136, 0.8835283, 1)
+z_index = 20
+scale = Vector2(0.5, 0.5)
+texture = ExtResource("1_xpjp1")
+
+[node name="Label" type="Label" parent="."]
+z_index = 21
+offset_left = -4.0
+offset_top = -12.0
+offset_right = 8.0
+offset_bottom = 11.0
+text = "D"
