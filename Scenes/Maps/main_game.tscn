@@ -1,0 +1,23 @@
+[gd_scene format=3 uid="uid://bkt648yl4irxe"]
+
+[node name="MainGame" type="Node2D"]
+
+[node name="Camera2D" type="Camera2D" parent="."]
+
+[node name="World" type="Node2D" parent="."]
+
+[node name="GroundLayer" type="TileMapLayer" parent="World"]
+
+[node name="ResourceLayer" type="TileMapLayer" parent="World"]
+
+[node name="Buildings" type="Node2D" parent="World"]
+
+[node name="Units" type="Node2D" parent="World"]
+
+[node name="HUD" type="CanvasLayer" parent="."]
+
+[node name="TopBar" type="Panel" parent="HUD"]
+custom_minimum_size = Vector2(0, 60)
+offset_right = 721.0
+offset_bottom = 60.0
+size_flags_horizontal = 0
