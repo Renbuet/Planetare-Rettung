@@ -13,22 +13,27 @@ var current_hover_hex: Vector2i = Vector2i.ZERO
 var active_drones = []
 # NEU: Speichert Daten zu den Kacheln (Menge an Ressourcen)
 var tile_data = {} 
-
+# NEU: Liste aller Gebäude (Basis + Relais)
+var buildings = []
 # Nebel-Logik (vorbereitet)
 var explored_hexes = {}
+# Kosten Konstante (muss mit HUD übereinstimmen oder zentral im GameManager liegen)
+# Der Einfachheit halber definieren wir sie hier lokal nochmal für den Check
+const COST_RELAY = { "metal": 40, "tech": 5 }
 
 func _ready():
-	# Signal verbinden: Wenn der Button im HUD gedrückt wird
 	GameManager.spawn_requested.connect(_on_spawn_requested)
+	# NEU: Wir hören auf Modus-Änderungen (optional, falls wir den Cursor ändern wollen)
 	
 	generate_map()
-	spawn_base()
+	
+	# Basis erstellen (und zur Liste hinzufügen)
+	spawn_building(Vector2i(0,0), GameManager.TERRAIN.BASE)
+	
 	center_camera()
 	selector.visible = false
 	
-	# Einen Start-Scout spawnen
 	spawn_drone(Vector2i(1, 0), Drone.Type.SCOUT)
-	
 	reveal_fog(Vector2i(0,0), 3)
 
 func generate_map():
@@ -63,12 +68,68 @@ func decide_terrain(q, r) -> int:
 func center_camera():
 	pass # Kamera macht das selbst
 
-func spawn_base():
-	var base_instance = building_scene.instantiate()
-	buildings_container.add_child(base_instance)
-	base_instance.position = ground_layer.map_to_local(Vector2i(0, 0))
-	base_instance.setup(Vector2i(0, 0), GameManager.TERRAIN.BASE)
+# Diese Funktion kann jetzt Basis UND Relais bauen
+func spawn_building(coords: Vector2i, type_id: int):
+	var b_instance = building_scene.instantiate()
+	buildings_container.add_child(b_instance)
+	
+	# Positionieren
+	b_instance.position = ground_layer.map_to_local(coords)
+	b_instance.setup(coords, type_id)
+	
+	# In Liste speichern
+	buildings.append(b_instance)
+	
+	# Map-Daten aktualisieren (damit man nicht nochmal drauf baut)
+	# Wir setzen die Zelle auf der Map visuell passend (oder lassen sie wie sie ist)
+	# Wichtig: Wir markieren im `tile_data` oder prüfen `get_building_at` später.
+	
+	# Nebel aufdecken
+	reveal_fog(coords, 4)
 
+# NEU: Bau-Versuch
+func try_build_relay(coords: Vector2i):
+	# 1. Ist das Feld leer? (Keine Ressource, kein anderes Gebäude)
+	if has_resource(coords):
+		print("Kann hier nicht bauen: Ressource im Weg!")
+		return
+		
+	for b in buildings:
+		if b.hex_coords == coords:
+			print("Hier steht schon ein Gebäude!")
+			return
+
+	# 2. Haben wir genug Ressourcen? (Sicherheitscheck, falls sich Werte seit Klick geändert haben)
+	var res = GameManager.resources
+	if res["metal"] >= COST_RELAY.metal and res["tech"] >= COST_RELAY.tech:
+		
+		# 3. Bezahlen
+		GameManager.modify_resource("metal", -COST_RELAY.metal)
+		GameManager.modify_resource("tech", -COST_RELAY.tech)
+		
+		# 4. Bauen
+		spawn_building(coords, GameManager.TERRAIN.RELAY)
+		print("Relais gebaut bei: ", coords)
+		
+		# 5. Modus zurücksetzen
+		GameManager.set_mode(GameManager.Mode.SELECT)
+		
+	else:
+		print("Nicht genug Ressourcen!")
+		GameManager.set_mode(GameManager.Mode.SELECT)
+
+# Alte Logik ausgelagert in eigene Funktion
+func send_drone_to_target(coords: Vector2i):
+	print("Klick auf: ", coords)
+	var drone_sent = false
+	for drone in active_drones:
+		if drone.my_type == Drone.Type.SCOUT and drone.current_state == Drone.State.IDLE:
+			drone.command_move_to(coords)
+			drone_sent = true
+			break
+	if not drone_sent:
+		print("Keine freie Drohne verfügbar!")
+		
 func spawn_drone(coords: Vector2i, type):
 	var drone = drone_scene.instantiate()
 	units_container.add_child(drone)
@@ -131,21 +192,29 @@ func reveal_fog(_center_hex: Vector2i, _radius: int):
 
 # --- WICHTIGE ÄNDERUNG HIER ---
 func handle_click():
-	# Prüfen, ob Feld gültig ist
+	# Check: Ist Feld gültig?
 	if ground_layer.get_cell_source_id(current_hover_hex) == -1:
 		return
 
-	print("Klick auf: ", current_hover_hex)
+	# --- MODUS UNTERSCHEIDUNG ---
 	
-	# Wir suchen eine Drohne, die Zeit hat (State == IDLE)
-	var drone_sent = false
+	if GameManager.current_mode == GameManager.Mode.BUILD_RELAY:
+		try_build_relay(current_hover_hex)
+		
+	elif GameManager.current_mode == GameManager.Mode.SELECT:
+		# Unsere alte Drohnen-Logik
+		send_drone_to_target(current_hover_hex)
+
+# Sucht das nächste Gebäude (Basis oder Relais) von einer Position aus
+func get_nearest_dropoff(from_hex: Vector2i) -> Vector2i:
+	var nearest_hex = Vector2i(0, 0) # Fallback: Basis
+	var min_dist = 99999.0
 	
-	for drone in active_drones:
-		# Wir prüfen: Ist es ein Scout? UND hat er gerade nichts zu tun?
-		if drone.my_type == Drone.Type.SCOUT and drone.current_state == Drone.State.IDLE:
-			drone.command_move_to(current_hover_hex)
-			drone_sent = true
-			break # WICHTIG: Wir brechen ab, damit nur EINE Drohne losfliegt!
-	
-	if not drone_sent:
-		print("Keine freie Drohne verfügbar! (Alle beschäftigt)")
+	for b in buildings:
+		# Abstand berechnen (wir nehmen einfach Euklidischen Abstand der Hex-Koordinaten)
+		var dist = Vector2(from_hex).distance_to(Vector2(b.hex_coords))
+		if dist < min_dist:
+			min_dist = dist
+			nearest_hex = b.hex_coords
+			
+	return nearest_hex

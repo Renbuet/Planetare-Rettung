@@ -1,25 +1,3 @@
-#extends CanvasLayer
-#
-## Referenzen zu den Labels (Pass die Pfade an, falls nötig!)
-#@onready var lbl_energy = $TopBar/HBoxContainer/LblEnergy
-#@onready var lbl_bio = $TopBar/HBoxContainer/LblBio
-#@onready var lbl_metal = $TopBar/HBoxContainer/LblMetal
-#@onready var lbl_tech = $TopBar/HBoxContainer/LblTech
-#
-#func _ready():
-	## Wir verbinden uns mit dem Signal vom GameManager
-	## Wann immer sich Ressourcen ändern, ruft er unsere Funktion '_on_resources_updated' auf.
-	#GameManager.resources_updated.connect(_on_resources_updated)
-	#
-	## Initiales Update erzwingen, damit nicht "Label" da steht
-	#_on_resources_updated(GameManager.resources)
-#
-#func _on_resources_updated(res: Dictionary):
-	## Text aktualisieren. Wir runden die Werte (floor), damit keine Kommazahlen stören.
-	#lbl_energy.text = "Energie: " + str(floor(res["energy"]))
-	#lbl_bio.text = "Bio: " + str(floor(res["biomass"]))
-	#lbl_metal.text = "Metall: " + str(floor(res["metal"]))
-	#lbl_tech.text = "Tech: " + str(floor(res["tech"]))
 extends CanvasLayer
 
 # Referenzen Oben
@@ -30,15 +8,18 @@ extends CanvasLayer
 
 # Referenzen Rechts (Pfade anpassen falls nötig!)
 @onready var btn_scout = $RightPanel/MarginContainer/VBoxContainer/BtnBuildScout
+@onready var btn_relay = $RightPanel/MarginContainer/VBoxContainer/BtnBuildRelay
 
 # Kosten (Konstanten)
 const COST_SCOUT = { "metal": 20, "tech": 2 }
+const COST_RELAY = { "metal": 40, "tech": 5 }
 
 func _ready():
 	GameManager.resources_updated.connect(_on_resources_updated)
 	
 	# Button Signal verbinden
-	btn_scout.pressed.connect(_on_btn_scout_pressed)
+	if btn_scout: btn_scout.pressed.connect(_on_btn_scout_pressed)
+	if btn_relay: btn_relay.pressed.connect(_on_btn_relay_pressed)
 	
 	_on_resources_updated(GameManager.resources)
 
@@ -62,3 +43,10 @@ func _on_btn_scout_pressed():
 	GameManager.spawn_requested.emit(Drone.Type.SCOUT)
 	
 	print("Signal 'spawn_requested' gesendet.")
+
+# NEU: Baumodus aktivieren
+func _on_btn_relay_pressed():
+	print("Baumodus: Relais ausgewählt.")
+	# Wir ziehen die Ressourcen erst ab, wenn wir wirklich bauen!
+	# Wir sagen dem GameManager nur: "Ändere den Modus"
+	GameManager.set_mode(GameManager.Mode.BUILD_RELAY)

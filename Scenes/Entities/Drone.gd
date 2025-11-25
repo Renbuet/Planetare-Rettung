@@ -433,7 +433,13 @@ func start_harvesting():
 
 func return_to_base():
 	current_state = State.RETURNING
-	target_position = world_layer_ref.map_to_local(home_coords)
+	
+	# NEU: Wir fragen die Welt nach dem nächsten Gebäude
+	var dropoff_hex = Vector2i(0,0)
+	if game_world and game_world.has_method("get_nearest_dropoff"):
+		dropoff_hex = game_world.get_nearest_dropoff(hex_coords)
+	
+	target_position = world_layer_ref.map_to_local(dropoff_hex)
 
 func deposit_cargo():
 	if cargo_amount > 0:
