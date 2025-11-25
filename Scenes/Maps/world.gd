@@ -11,6 +11,8 @@ var drone_scene = preload("res://Scenes/Entities/Drone.tscn")
 const MAP_RADIUS = 10 
 var current_hover_hex: Vector2i = Vector2i.ZERO
 var active_drones = []
+# NEU: Speichert Daten zu den Kacheln (Menge an Ressourcen)
+var tile_data = {} 
 
 # Nebel-Logik (vorbereitet)
 var explored_hexes = {}
@@ -30,6 +32,8 @@ func _ready():
 	reveal_fog(Vector2i(0,0), 3)
 
 func generate_map():
+	tile_data.clear() # Reset
+	
 	for q in range(-MAP_RADIUS, MAP_RADIUS + 1):
 		var r1 = max(-MAP_RADIUS, -q - MAP_RADIUS)
 		var r2 = min(MAP_RADIUS, -q + MAP_RADIUS)
@@ -37,6 +41,14 @@ func generate_map():
 			var hex = Vector2i(q, r)
 			var terrain_id = decide_terrain(q, r)
 			ground_layer.set_cell(hex, 0, Vector2i(0,0), terrain_id)
+			
+			# NEU: Wenn es eine Ressource ist, Daten speichern
+			if terrain_id in [GameManager.TERRAIN.BIO, GameManager.TERRAIN.METAL, GameManager.TERRAIN.TECH]:
+				# Wir geben jedem Feld zufällig 50 bis 150 Einheiten
+				tile_data[hex] = {
+					"amount": randi_range(50, 150),
+					"max_amount": 150 # Für spätere Progress-Bars
+				}
 
 func decide_terrain(q, r) -> int:
 	if q == 0 and r == 0:
@@ -63,7 +75,30 @@ func spawn_drone(coords: Vector2i, type):
 	drone.setup(coords, type, ground_layer)
 	active_drones.append(drone)
 	reveal_fog(coords, 3)
+# NEU: Diese Funktion ruft die Drohne auf, um etwas abzubauen
+# Gibt zurück, wie viel tatsächlich abgebaut wurde
+func harvest_tile(coords: Vector2i, requested_amount: int) -> int:
+	# Gibt es hier Daten?
+	if not tile_data.has(coords):
+		return 0
+	
+	var available = tile_data[coords]["amount"]
+	var taken = min(available, requested_amount)
+	
+	# Menge reduzieren
+	tile_data[coords]["amount"] -= taken
+	
+	# Wenn leer -> Tile ändern zu "EMPTY" (Boden)
+	if tile_data[coords]["amount"] <= 0:
+		tile_data.erase(coords)
+		ground_layer.set_cell(coords, 0, Vector2i(0,0), GameManager.TERRAIN.EMPTY)
+		print("Ressource bei ", coords, " erschöpft!")
+		
+	return taken
 
+# NEU: Hilfsfunktion für die Drohne: Gibt es da noch was?
+func has_resource(coords: Vector2i) -> bool:
+	return tile_data.has(coords) and tile_data[coords]["amount"] > 0
 # Diese Funktion wird vom GameManager aufgerufen (vom HUD Button)
 func _on_spawn_requested(type):
 	spawn_drone(Vector2i(0, 0), type)
