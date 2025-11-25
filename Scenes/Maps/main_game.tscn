@@ -1,8 +1,9 @@
-[gd_scene load_steps=6 format=3 uid="uid://bkt648yl4irxe"]
+[gd_scene load_steps=7 format=3 uid="uid://bkt648yl4irxe"]
 
 [ext_resource type="Script" uid="uid://cr4mdry4n7kq7" path="res://Scenes/Maps/camera_2d.gd" id="1_8e7j1"]
 [ext_resource type="Script" uid="uid://dafuxv5ndkrcn" path="res://Scenes/Maps/world.gd" id="1_545s0"]
 [ext_resource type="Texture2D" uid="uid://dmt0q1g2nq8jo" path="res://Assets/Hexagons/hexagon_64x64.png" id="1_mhfj2"]
+[ext_resource type="Script" uid="uid://ym8y4dkwslo3" path="res://Scenes/Maps/HUD.gd" id="4_vhrsu"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_8e7j1"]
 texture = ExtResource("1_mhfj2")
@@ -52,9 +53,70 @@ z_index = 10
 texture = ExtResource("1_mhfj2")
 
 [node name="HUD" type="CanvasLayer" parent="."]
+script = ExtResource("4_vhrsu")
 
 [node name="TopBar" type="Panel" parent="HUD"]
-custom_minimum_size = Vector2(0, 60)
-offset_right = 721.0
-offset_bottom = 60.0
-size_flags_horizontal = 0
+custom_minimum_size = Vector2(0, 50)
+anchors_preset = 10
+anchor_right = 1.0
+grow_horizontal = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="HUD/TopBar"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 20
+
+[node name="LblEnergy" type="Label" parent="HUD/TopBar/HBoxContainer"]
+layout_mode = 2
+text = "0"
+
+[node name="LblBio" type="Label" parent="HUD/TopBar/HBoxContainer"]
+layout_mode = 2
+text = "0"
+
+[node name="LblMetal" type="Label" parent="HUD/TopBar/HBoxContainer"]
+layout_mode = 2
+text = "0"
+
+[node name="LblTech" type="Label" parent="HUD/TopBar/HBoxContainer"]
+layout_mode = 2
+text = "0"
+
+[node name="RightPanel" type="Panel" parent="HUD"]
+custom_minimum_size = Vector2(200, 0)
+anchors_preset = 11
+anchor_left = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 0
+grow_vertical = 2
+size_flags_horizontal = 8
+
+[node name="MarginContainer" type="MarginContainer" parent="HUD/RightPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 5
+
+[node name="VBoxContainer" type="VBoxContainer" parent="HUD/RightPanel/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Label" type="Label" parent="HUD/RightPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "KONSTRUKTION"
+horizontal_alignment = 1
+
+[node name="BtnBuildScout" type="Button" parent="HUD/RightPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Scout (20 M, 2 T)"

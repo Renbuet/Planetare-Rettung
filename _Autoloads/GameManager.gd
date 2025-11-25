@@ -4,6 +4,7 @@ extends Node
 signal resources_updated(res_dict)
 signal mode_changed(new_mode)
 signal log_message(text)
+signal spawn_requested(drone_type)
 
 # Spiel-Modi (Enum statt Strings, um Tippfehler zu vermeiden)
 enum Mode { SELECT, BUILD_RELAY, BUILD_SCOUT, BUILD_HAULER }
