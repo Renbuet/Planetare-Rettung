@@ -40,11 +40,13 @@ func _on_btn_scout_pressed():
 	# Ressourcen abziehen
 	GameManager.modify_resource("metal", -COST_SCOUT.metal)
 	GameManager.modify_resource("tech", -COST_SCOUT.tech)
-	GameManager.spawn_requested.emit(Drone.Type.SCOUT)
+	
+	# KORREKTUR: Wir nutzen jetzt den globalen Typ aus dem GameManager
+	GameManager.spawn_requested.emit(GameManager.DroneType.HARVESTER)
 	
 	print("Signal 'spawn_requested' gesendet.")
 
-# NEU: Baumodus aktivieren
+# Baumodus aktivieren
 func _on_btn_relay_pressed():
 	print("Baumodus: Relais ausgewählt.")
 	# Wir ziehen die Ressourcen erst ab, wenn wir wirklich bauen!

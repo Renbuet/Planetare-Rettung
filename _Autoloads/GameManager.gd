@@ -1,16 +1,20 @@
 extends Node
 
-# Signale: "Radio-Durchsagen", wenn sich Werte ändern
+# Signale
 signal resources_updated(res_dict)
 signal mode_changed(new_mode)
 signal log_message(text)
 signal spawn_requested(drone_type)
 
-# Spiel-Modi (Enum statt Strings, um Tippfehler zu vermeiden)
+# Spiel-Modi
 enum Mode { SELECT, BUILD_RELAY, BUILD_SCOUT, BUILD_HAULER }
 var current_mode = Mode.SELECT
 
-# Ressourcen (wie dein 'state.res')
+# --- ZEIT SYSTEM ---
+# 1.0 = Normale Geschwindigkeit, 2.0 = Doppelte Geschwindigkeit (Paid Mode)
+var game_speed_modifier: float = 1.0 
+
+# Ressourcen
 var resources = {
 	"energy": 100.0,
 	"max_energy": 200.0,
@@ -19,42 +23,39 @@ var resources = {
 	"tech": 10.0
 }
 
-# Terrain-Definitionen (wie dein 'T'-Objekt)
-# Wir nutzen hier die "Atlas-Koordinaten" oder IDs, die wir gleich im TileSet anlegen.
-# Da wir Alternative Tiles nutzen werden, speichern wir hier die "Alternative ID".
+# Terrain Definitionen
 const TERRAIN = {
-	"EMPTY": 0,  # Basis-Tile
-	"ROCK": 1,   # Alternative 1
-	"BIO": 2,    # Alternative 2 usw...
-	"METAL": 3,
-	"TECH": 4,
-	"BASE": 5,
-	"RELAY": 6
+	"EMPTY": 0, "ROCK": 1, "BIO": 2, "METAL": 3, "TECH": 4, "BASE": 5, "RELAY": 6
 }
 
+# Drohnen Typen (Global verfügbar machen)
+enum DroneType { HARVESTER, TRANSPORTER, BUILDER }
+
 func _ready():
-	# Einmaliger Aufruf zum Start, damit die UI Bescheid weiß
 	emit_signal("resources_updated", resources)
 
-# Hilfsfunktion zum Ändern von Ressourcen
+# Hilfsfunktion, um überall im Spiel die korrekte Delta-Zeit zu bekommen
+func get_scaled_delta(delta: float) -> float:
+	return delta * game_speed_modifier
+
+func set_paid_mode(active: bool):
+	game_speed_modifier = 2.0 if active else 1.0
+	#log("Geschwindigkeit auf " + str(game_speed_modifier) + "x gesetzt.")
+	print("Geschwindigkeit auf " + str(game_speed_modifier) + "x gesetzt.")
+
 func modify_resource(type: String, amount: float):
 	if type in resources:
 		resources[type] += amount
-		
-		# Limits beachten (z.B. Max Energie oder nicht unter 0)
 		if type == "energy":
 			resources[type] = clamp(resources[type], 0, resources["max_energy"])
 		else:
-			resources[type] = max(0, resources[type]) # Nicht negativ werden
-			
+			resources[type] = max(0, resources[type])
 		emit_signal("resources_updated", resources)
 
-# Hilfsfunktion für den Modus
 func set_mode(new_mode):
 	current_mode = new_mode
 	emit_signal("mode_changed", current_mode)
 
-# Hilfsfunktion für das Log
 func log(text: String):
-	print(text) # Auch in die Konsole drucken
+	print(text)
 	emit_signal("log_message", text)
